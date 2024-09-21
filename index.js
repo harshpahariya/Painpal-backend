@@ -46,7 +46,7 @@ const query = `EXEC GetShoulderData
 @DiabetesThyroidHeartStroke ='yes';`
 
 // Define route for fetching data from SQL Server
-app.post("/", (request, response) => {
+app.post("/insert", (request, response) => {
     // Execute a SELECT query
     new sql.Request().query(query, (err, result) => {
         if (err) {
@@ -58,7 +58,12 @@ app.post("/", (request, response) => {
     });
 });
 
-// Start the server on port 3000
-app.listen(1337, () => {
-    console.log("Listening on port 1337...");
+
+app.get("/", (req, res) => {
+    res.send("Hello, Worlds!");
+  });
+
+// Start the server on port 8080
+app.listen(8080, () => {
+    console.log("Listening on port 8080...");
 });
