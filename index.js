@@ -23,7 +23,7 @@ sql.connect(config, err => {
     console.log("Connection Successful!");
 });
 
-const query = `EXEC GetShoulderData
+const insertQuery = `EXEC GetShoulderData
 @ques1= 'Pain location in shoulder',
 @choices1 ='Outside of the shoulder (Side), Front of the shoulder',
 @ques2 ='Did you have / Involved in',
@@ -45,18 +45,28 @@ const query = `EXEC GetShoulderData
 @Smoking= 'yes',
 @DiabetesThyroidHeartStroke ='yes';`
 
+const fetchQuery = `EXEC GetChoices`
+
 // Define route for fetching data from SQL Server
 app.post("/insert", (request, response) => {
-    // Execute a SELECT query
-    new sql.Request().query(query, (err, result) => {
+    new sql.Request().query(insertQuery, (err, result) => {
         if (err) {
             console.error("Error executing query:", err);
         } else {
             response.send(result.recordset); // Send query result as response
-            console.dir(result.recordset);
         }
     });
 });
+
+app.get('/fetch', (req, res) => {
+    new sql.Request().query(fetchQuery, (err, result) => {
+        if (err) {
+            console.error("Error executing query:", err);
+        } else {
+            res.send(result.recordset); // Send query result as response
+        }
+    });
+})
 
 
 app.get("/", (req, res) => {
