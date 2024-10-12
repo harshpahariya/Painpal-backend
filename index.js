@@ -1,5 +1,6 @@
 const express = require("express");
 const sql = require("mssql");
+const combineDuplicates = require("./utils/combineDuplicates");
 
 const app = express();
 
