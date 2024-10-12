@@ -63,7 +63,9 @@ app.get('/fetch', (req, res) => {
         if (err) {
             console.error("Error executing query:", err);
         } else {
-            res.send(result.recordset); // Send query result as response
+            const data = result.recordset;
+            const updatedData = combineDuplicates(data)
+            res.send(updatedData); 
         }
     });
 })
