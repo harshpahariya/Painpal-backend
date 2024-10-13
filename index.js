@@ -5,7 +5,7 @@ const combineDuplicates = require("./utils/combineDuplicates");
 
 const app = express();
 
-app.use(cors({ origin: "https://painpal-backend.onrender.com" }));
+app.use(cors());
 
 // SQL Server configuration
 var config = {
