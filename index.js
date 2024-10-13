@@ -1,8 +1,11 @@
 const express = require("express");
 const sql = require("mssql");
+const cors = require('cors')
 const combineDuplicates = require("./utils/combineDuplicates");
 
 const app = express();
+
+app.use(cors({ origin: "https://painpal-backend.onrender.com" }));
 
 // SQL Server configuration
 var config = {
