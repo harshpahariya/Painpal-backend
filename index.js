@@ -6,6 +6,7 @@ const combineDuplicates = require("./utils/combineDuplicates");
 const app = express();
 
 app.use(cors());
+app.use(express.json());
 
 // SQL Server configuration
 var config = {
@@ -18,6 +19,92 @@ var config = {
     }
 }
 
+async function insertShoulderData(payload) {
+    try {
+      // Connect to the database
+      await sql.connect(config);
+  
+      // Create a request object
+      const request = new sql.Request();
+  
+      // Prepare the SQL command
+      const insertQuery = `
+        EXEC GetShoulderData
+          @ques1 = @ques1,
+          @choices1 = @choices1,
+          @ques2 = @ques2,
+          @choices2 = @choices2,
+          @ques3 = @ques3,
+          @choices3 = @choices3,
+          @ques4 = @ques4,
+          @choices4 = @choices4,
+          @ques5 = @ques5,
+          @choices5 = @choices5,
+          @ques6 = @ques6,
+          @choices6 = @choices6,
+          @ques7 = @ques7,
+          @choices7 = @choices7,
+          @sex = @sex,
+          @age_min = @age_min,
+          @age_max = @age_max,
+          @YouConsiderYourself = @YouConsiderYourself,
+          @Smoking = @Smoking,
+          @DiabetesThyroidHeartStroke = @DiabetesThyroidHeartStroke;
+      `;
+  
+      // Bind parameters, adjusting based on the new payload structure
+      request.input('ques1', sql.VarChar, 'Pain location in shoulder');
+      request.input('choices1', sql.VarChar, payload["Pain location in shoulder"].join(', '));
+  
+      request.input('ques2', sql.VarChar, 'Did you have / Involved in');
+      request.input('choices2', sql.VarChar, payload["Did you have / Involved in "].join(', '));
+  
+      request.input('ques3', sql.VarChar, 'Feel pain when');
+      request.input('choices3', sql.VarChar, payload["Feel pain when"].join(', '));
+  
+      request.input('ques4', sql.VarChar, 'Affected area feels');
+      request.input('choices4', sql.VarChar, payload["Affected area feels"].join(', '));
+  
+      request.input('ques5', sql.VarChar, 'Feel when you move');
+      request.input('choices5', sql.VarChar, payload["Feel when you move"].join(', '));
+  
+      request.input('ques6', sql.VarChar, 'Pain from sport');
+      request.input('choices6', sql.VarChar, payload["Pain from sport"].join(', '));
+  
+      request.input('ques7', sql.VarChar, 'Pain radiating into other parts');
+      request.input('choices7', sql.VarChar, payload["Pain radiating into other parts"].join(', '));
+  
+      request.input('sex', sql.VarChar, payload.gender);
+      
+      // Extract age range and convert to min/max values
+      const ageRange = payload.ageRange.split('-');
+      const age_min = parseInt(ageRange[0]);
+      const age_max = parseInt(ageRange[1]);
+      request.input('age_min', sql.Int, age_min);
+      request.input('age_max', sql.Int, age_max);
+      
+      request.input('YouConsiderYourself', sql.VarChar, payload.weightType);
+      request.input('Smoking', sql.VarChar, payload.Smoking[0]); // Assuming it is still an array
+      request.input('DiabetesThyroidHeartStroke', sql.VarChar, payload["Do you have any of these - Diabetes, thyroid problems, heart disease, or stroke"][0]); // Assuming it is also an array
+  
+      // Execute the query and get the result
+      const result = await request.query(insertQuery);
+      
+      // Assuming the stored procedure returns the JSON object
+      const returnedData = result.recordset; // This will be an array of returned rows
+  
+      // Send the returned data back to the frontend
+      return returnedData;
+    } catch (err) {
+      console.error('Error inserting data:', err);
+      throw err; // Rethrow error for further handling
+    } finally {
+      // Close the database connection
+      await sql.close();
+    }
+  }
+  
+
 // Connect to SQL Server
 sql.connect(config, err => {
     if (err) {
@@ -27,39 +114,18 @@ sql.connect(config, err => {
     console.log("Connection Successful!");
 });
 
-const insertQuery = `EXEC GetShoulderData
-@ques1= 'Pain location in shoulder',
-@choices1 ='Outside of the shoulder (Side), Front of the shoulder',
-@ques2 ='Did you have / Involved in',
-@choices2= 'Repetitive overhead movements, Repetitive activities or overuse of specific muscle, Lifting heavy objects, Falling onto an outstretched hand',
-@ques3= 'Feel pain when',
-@choices3 ='Stretching the affected arm or shoulder',
-@ques4= 'Affected area feels',
-@choices4= 'Pins and needles',
-@ques5= 'feel when you move',
-@choices5= 'Hear clicking noice',
-@ques6= 'Pain from sport',
-@choices6 ='Swinging injury (Cricket, Tennis, Hockey, Golf, Baseball, Softball pitching, Basket ball, Badminton)',
-@ques7= 'Pain radiating into other parts',
-@choices7= 'Neck',
-@sex = 'M',
-@age_min =15,
-@age_max= 50,
-@YouConsiderYourself='Overweight',
-@Smoking= 'yes',
-@DiabetesThyroidHeartStroke ='yes';`
+
 
 const fetchQuery = `EXEC GetChoices`
 
 // Define route for fetching data from SQL Server
-app.post("/insert", (request, response) => {
-    new sql.Request().query(insertQuery, (err, result) => {
-        if (err) {
-            console.error("Error executing query:", err);
-        } else {
-            response.send(result.recordset); // Send query result as response
-        }
-    });
+app.post("/insert", async (req, res) => {
+    try {
+        const responseData = await insertShoulderData(req.body);
+        res.json(responseData); // Send back the JSON object
+      } catch (err) {
+        res.status(500).json({ error: 'An error occurred while inserting data' });
+      }
 });
 
 app.get('/fetch', (req, res) => {
