@@ -19,11 +19,17 @@ var config = {
     }
 }
 
+// Connect to SQL Server
+sql.connect(config, err => {
+    if (err) {
+        console.log('ERROR', err)
+        throw err;
+    }
+    console.log("Connection Successful!");
+});
+
 async function insertShoulderData(payload) {
     try {
-      // Connect to the database
-      await sql.connect(config);
-  
       // Create a request object
       const request = new sql.Request();
   
@@ -98,21 +104,8 @@ async function insertShoulderData(payload) {
     } catch (err) {
       console.error('Error inserting data:', err);
       throw err; // Rethrow error for further handling
-    } finally {
-      // Close the database connection
-      await sql.close();
     }
   }
-  
-
-// Connect to SQL Server
-sql.connect(config, err => {
-    if (err) {
-        console.log('ERROR', err)
-        throw err;
-    }
-    console.log("Connection Successful!");
-});
 
 
 
